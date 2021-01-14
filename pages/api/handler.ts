@@ -1,18 +1,11 @@
 import API from "./api";
-import { IAPIRequest, IPageRequest } from "../../typings/api";
+import response from "../../src/response";
+import { isAPIRequest } from "../../src/typecheck";
 import { NextApiRequest, NextApiResponse } from "next";
-
-const isAPIRequest = (
-  request: IAPIRequest | IPageRequest
-): request is IAPIRequest => {
-  return (
-    (request as IAPIRequest).tool !== undefined &&
-    (request as IAPIRequest).lang !== undefined
-  );
-};
 
 const callAPI = async (req: NextApiRequest) => {
   let result: any;
+
   await import(`../../api/${req.query.lang}/${req.query.tool}.ts`)
     .then((module: any) => {
       result = module.default(req);
@@ -25,23 +18,15 @@ const callAPI = async (req: NextApiRequest) => {
 };
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  let response: any;
-
   if (isAPIRequest(req.query)) {
     try {
-      response = await callAPI(req);
+      response(res, await callAPI(req));
     } catch (error) {
       console.log(error);
     }
-
-    res.setHeader("Content-Type", "application/json");
   } else {
-    res.setHeader("Content-Type", "text/html");
-    response = "<div>gfdgdfg</div>";
+    response(res, "<div>This is for test</div>");
   }
-
-  res.statusCode = 200;
-  res.end(response);
 };
 
 export default handler;
