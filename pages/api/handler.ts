@@ -1,9 +1,9 @@
 import API from "./api";
-import response from "../../src/response";
+import { response, response_type } from "../../src/response";
 import { isAPIRequest } from "../../src/typecheck";
 import { NextApiRequest, NextApiResponse } from "next";
 
-const callAPI = async (req: NextApiRequest) => {
+const callAPI = async (req: NextApiRequest, res: NextApiResponse) => {
   let result: any;
 
   await import(`../../api/${req.query.lang}/${req.query.tool}.ts`)
@@ -11,7 +11,11 @@ const callAPI = async (req: NextApiRequest) => {
       result = module.default(req);
     })
     .catch((error: any) => {
-      console.log(error);
+      response({
+        now_response: res,
+        content: { result: error.message },
+        type: response_type.ERROR,
+      });
     });
 
   return result;
@@ -20,12 +24,12 @@ const callAPI = async (req: NextApiRequest) => {
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (isAPIRequest(req.query)) {
     try {
-      response(res, await callAPI(req));
+      response({ now_response: res, content: await callAPI(req, res) });
     } catch (error) {
       console.log(error);
     }
   } else {
-    response(res, "<div>This is for test</div>");
+    response({ now_response: res, content: "<div>This is for test</div>" });
   }
 };
 
