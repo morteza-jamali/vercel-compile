@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "bootstrap": "^4.5.3",
+    "esprima": "^4.0.1",
     "glamor": "^2.20.40",
     "next": "10.0.5",
     "next-i18next": "^7.0.1",

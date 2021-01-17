@@ -8,19 +8,29 @@ export default function run(request: NextApiRequest) {
 
   if (isTSCompilerRequest(request.body)) {
     if (isStringBasedCompile(request.body)) {
-      source = new Map(
-        Object.entries(
-          compileByString(request.body.source_code, request.body.options)
-        )
-      ).get("outputText");
+      try {
+        let compiled = compileByString(
+          request.body.source_code,
+          request.body.options
+        );
+        source = new Map(Object.entries(compiled)).get("outputText");
 
-      return {
-        result: evalute(source),
-      };
+        return {
+          result: evalute(source),
+        };
+      } catch (error) {
+        console.log(error);
+      }
     }
   }
 }
 
 const evalute = (source: string) => {
-  return eval(source);
+  console.log(source);
+  
+  try {
+    return eval(source);
+  } catch (error) {
+    console.log(error);
+  }
 };

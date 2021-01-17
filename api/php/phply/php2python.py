@@ -1,14 +1,8 @@
 #!/usr/bin/env python
 
-# php2python.py - Converts PHP to Python using unparse.py
-# Usage: php2python.py < input.php > output.py
-
-import sys
-sys.path.append('..')
-
-from phply.phplex import lexer
-from phply.phpparse import make_parser
-from phply import pythonast
+from phplex import lexer
+from phpparse import make_parser
+import pythonast
 
 from ast import Module
 from unparse import Unparser
