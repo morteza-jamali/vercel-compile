@@ -4,3 +4,10 @@ export class URLError extends Error {
     this.name = "URLError";
   }
 }
+
+export class SyntaxError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SyntaxError";
+  }
+}

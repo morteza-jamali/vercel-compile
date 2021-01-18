@@ -1,40 +1,39 @@
-import API from "./api";
 import { URLError } from "../../src/Error";
-import { response, response_type } from "../../src/response";
+import { extendResponse } from "../../src/response";
 import { isAPIRequest } from "../../src/typecheck";
-import { NextApiRequest, NextApiResponse } from "next";
+import type { NextApiRequest, NextApiResponse } from "next";
+import { INextApiResponse } from "../../typings/api";
 
-const callAPI = async (req: NextApiRequest) => {
-  let result: any;
-
-  await import(`../../api/${req.query.lang}/${req.query.tool}.ts`)
+const callAPI = async (request: NextApiRequest, response: INextApiResponse) => {
+  await import(`../../api/${request.query.lang}/${request.query.tool}.ts`)
     .then((module: any) => {
-      result = module.default(req);
+      module.default(request, response);
     })
     .catch(() => {
-      throw new URLError(`${req.query.tool}/${req.query.lang}`);
+      throw new URLError(`${request.query.tool}/${request.query.lang}`);
     });
-
-  return result;
 };
 
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  if (isAPIRequest(req.query)) {
+const handler = async (request: NextApiRequest, _response: NextApiResponse) => {
+  let response: INextApiResponse = _response as INextApiResponse;
+
+  extendResponse(response);
+
+  if (isAPIRequest(request.query)) {
     try {
-      response({ now_response: res, content: await callAPI(req) });
+      await callAPI(request, response);
     } catch (error) {
       if (error instanceof URLError) {
-        response({
-          now_response: res,
-          content: { message: error.message },
-          type: response_type.ERROR,
+        response.returnResult({
+          content: error.message,
+          type: response.type.ERROR,
         });
       } else {
         // Log error to hosted application
       }
     }
   } else {
-    response({ now_response: res, content: "<div>This is for test</div>" });
+    response.returnResult({ content: "<div>This is for test</div>" });
   }
 };
 

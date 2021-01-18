@@ -1,36 +1,31 @@
 import { NextApiRequest } from "next";
-import { isTSCompilerRequest } from "../../src/typecheck";
-import { isStringBasedCompile } from "./index.d";
+import { SyntaxError } from "../../src/Error";
+import { INextApiResponse } from "../../typings/api";
+import { isStringBasedCompile, isTSCompilerRequest } from "./index.d";
 import { compileByString } from "./tsc";
 
-export default function run(request: NextApiRequest) {
-  let source: string;
-
+export default function run(
+  request: NextApiRequest,
+  response: INextApiResponse
+) {
   if (isTSCompilerRequest(request.body)) {
     if (isStringBasedCompile(request.body)) {
-      try {
-        let compiled = compileByString(
-          request.body.source_code,
-          request.body.options
-        );
-        source = new Map(Object.entries(compiled)).get("outputText");
+      let content: string;
 
-        return {
-          result: evalute(source),
-        };
+      try {
+        content = eval(
+          compileByString(request.body.source_code, request.body.options)
+        );
+
+        response.returnResult({ content });
       } catch (error) {
-        console.log(error);
+        if (error instanceof SyntaxError) {
+          response.returnResult({
+            content: error.message,
+            type: response.type.ERROR,
+          });
+        }
       }
     }
   }
 }
-
-const evalute = (source: string) => {
-  console.log(source);
-  
-  try {
-    return eval(source);
-  } catch (error) {
-    console.log(error);
-  }
-};

@@ -1,16 +1,10 @@
-import { ITSReqBody, IAPIRequest, IPageRequest } from "../typings/api";
-
-export function isTSCompilerRequest(
-  request: ITSReqBody | any
-): request is ITSReqBody {
-  return (request as ITSReqBody).source_code !== undefined;
-}
+import { IAPIRequestURL, IPageRequestURL } from "../typings/api";
 
 export function isAPIRequest(
-  request: IAPIRequest | IPageRequest
-): request is IAPIRequest {
+  request: IAPIRequestURL | IPageRequestURL
+): request is IAPIRequestURL {
   return (
-    (request as IAPIRequest).tool !== undefined &&
-    (request as IAPIRequest).lang !== undefined
+    (request as IAPIRequestURL).tool !== undefined &&
+    (request as IAPIRequestURL).lang !== undefined
   );
 }

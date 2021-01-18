@@ -1,56 +1,32 @@
-import { NextApiResponse } from "next";
-import { isCompileAPIResponse } from "../api/typescript/index.d";
-import { IAPIResponse } from "../typings/api";
+import {
+  INextApiResponse,
+  IAPIResponseParams,
+  IAPIResultJSON,
+} from "../typings/api";
 
-export interface IResponseOptions {
-  now_response: NextApiResponse;
-  content: any;
-  code?: number;
-  type?: number;
-}
+export const extendResponse = (response: INextApiResponse) => {
+  response.type = {
+    ERROR: 1,
+    SUCCESS: 0,
+  };
 
-export const response_type = {
-  ERROR: 1,
-  SUCCESS: 0,
-};
+  response.returnResult = (params: IAPIResponseParams) => {
+    params = { ...params_default, ...params };
+    params.content = JSON.stringify({
+      result: params.content,
+      type: Object.keys(response.type).find(
+        (key) => response.type[key] === params.type
+      ),
+    } as IAPIResultJSON);
+    params.response.statusCode = params.code;
+    params.response.setHeader("Content-Type", "application/json");
+    params.response.end(params.content);
+  };
 
-let params_default: IResponseOptions = {
-  now_response: undefined,
-  content: undefined,
-  code: 200,
-  type: response_type.SUCCESS,
-};
-
-export function response(params: IResponseOptions) {
-  params = { ...params_default, ...params };
-
-  switch (typeof params.content) {
-    case "string":
-      params.now_response.setHeader("Content-Type", "text/html");
-      break;
-    case "object":
-      params.content = JSON.stringify(
-        validateResponseObject(params.content, params.type)
-      );
-      params.now_response.setHeader("Content-Type", "application/json");
-      break;
-  }
-
-  params.now_response.statusCode = params.code;
-  params.now_response.end(params.content);
-}
-
-const validateResponseObject = (response: any, type: number): IAPIResponse => {
-  Object.keys(response_type).forEach((key) => {
-    if (response_type[key] === type) {
-      response.type = key;
-    }
-  });
-
-  if (isCompileAPIResponse(response)) {
-    response["result"] = response.outputText;
-    delete response.outputText;
-  }
-
-  return response;
+  let params_default: IAPIResponseParams = {
+    response,
+    content: "",
+    code: 200,
+    type: response.type.SUCCESS,
+  };
 };
